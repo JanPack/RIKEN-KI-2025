@@ -1,0 +1,548 @@
+---
+title: "Assignment 2"
+author: Jan Pack
+output:
+  html_document:
+    df_print: paged
+---
+
+## Task 3:
+
+### Load Packages
+
+```{r}
+library(tidyverse)
+library(BiocManager)
+```
+
+## Task 4:
+
+### Calculate Answers
+
+```{r}
+#1
+sqrt(10)
+
+#2
+log2(32)
+
+#3
+sum(1:1000)
+
+#4
+#define all even numbers in an object
+evens = seq(2,1000, by=2)
+
+#sum
+sum(evens)
+
+#5
+#Use the choose function
+choose(100,2)
+
+#6
+#Use the choose function again but with k being 3
+choose(100,3)
+```
+
+## Task 5
+
+### CO2 data set analysis
+
+```{r}
+#1
+#preview the data
+dim(CO2)
+
+head(CO2)
+
+tail(CO2)
+
+#2
+#This dataset is a series of measurements of CO2 uptake rates of plants from Quebec and Mississippi in either chilled or non-chilled conditions. The variables include the Plant, Type, Treatment, CO2 concentration and uptake.
+
+#3
+#Select Rows based on Type and define as new objects
+Quebec = CO2 %>% filter(Type=="Quebec")
+Mississippi = CO2 %>% filter(Type == "Mississippi")
+
+#Calculate median 
+median(Quebec$uptake)
+median(Mississippi$uptake)
+
+#Calculate average
+mean(Quebec$uptake)
+mean(Mississippi$uptake)
+
+```
+
+## Task 6
+
+```{r}
+#1 
+#Function for calculating the ratio of mean and median
+ratio_mean_median <- function(x) {
+  
+  m_mean = mean(x)
+  m_median = median(x)
+  
+  return(m_mean / m_median)
+}
+
+#test with CO2 dataset from task 5
+
+ratio_mean_median(Quebec$uptake)
+
+ratio_mean_median(Mississippi$uptake)
+
+#2
+#Function for ignoring min/max and calculating mean
+
+trimmed_mean <- function(x) {
+  
+  x_trim <- x[x != min(x) & x != max(x)]
+  
+  return(mean(x_trim))
+}
+
+#test with CO2 dataset from task 5
+
+trimmed_mean(Quebec$uptake)
+
+trimmed_mean(Mississippi$uptake)
+
+```
+
+#3 Piping
+
+In piping, the function that follows the pipe uses the output of the function that precedes it.
+
+The syntax is as follows:
+
+```{r}
+# x %>% x
+```
+
+Its usefulness lies in its ability to link multiple operations.
+
+It can be used when a series of trivial commands are performed on a data set but should be avoided when the intended operations are complex.
+
+#4 apply commands
+
+The apply functions enable repeated function applications to elements of a data structure. In my work I will have to analyse big data structures such as gene mutation lists or scRNA expression data, so apply commands could be useful for easier data pinpointing and applications of initial quality control steps and subsequent analysis functions.
+
+## Task 7
+
+1 Magic Guys
+
+1a: Basic analysis with histograms
+
+```{r}
+#download the file to my working directory, then read the csv file using read.csv
+guys =read.csv("magic_guys.csv")
+
+#subset the lenght of each species using subset()
+
+sith_lengths <- subset(guys, species == "sith")$length
+jedi_lengths <- subset(guys, species == "jedi")$length
+
+# plot histograms with different breaks
+
+#print subsequent plots side by side with 2 plots in 1 row
+par(mfrow = c(1, 2))  
+
+#create histogram plots using hist
+
+hist(sith_lengths,
+     breaks = 10,
+     col = "red",
+     main = "Sith Length Distribution",
+     xlab = "Length")
+
+hist(jedi_lengths,
+     breaks = 20,
+     col = "blue",
+     main = "Jedi Length Distribution",
+     xlab = "Length")
+```
+
+More plots with different breaks
+
+```{r}
+#use the same subsets to make two more histogram plots with different breaks
+
+#plotting side by side
+par(mfrow = c(1, 2))  
+
+
+hist(sith_lengths,
+     breaks = 30,
+     col = "red",
+     main = "Sith Length Distribution",
+     xlab = "Length")
+
+hist(jedi_lengths,
+     breaks = 10,
+     col = "blue",
+     main = "Jedi Length Distribution",
+     xlab = "Length")
+```
+
+Combined histogram for direct comparison that can be saved later on
+
+```{r}
+#define guys_histo as the plot  
+
+guys_histo = ggplot(guys, aes(x = length, fill = species)) + 
+  
+  #the fill argument will color the bars depending on jedi or sith  identity
+  
+  geom_histogram(alpha = 0.4, bins = 20) +
+  
+  #alpha makes the bars transparent for better comparison
+  
+  scale_fill_manual(values = c("sith" = "red", "jedi" = "blue")) +
+  
+  #this command colors sith red and jedi blue
+  
+  labs(title = "Histogram of Lengths") +
+  theme_minimal()
+
+#plot the graph
+plot(guys_histo)
+```
+
+1 b Basic analysis with boxplot
+
+```{r}
+#compare the length of the two species with geom_boxplot, this time by piping in the dplyr filter command
+
+guys_box = #assign the plot to guys_box
+  ggplot(guys, aes(x = species, y = length, fill = species)) +
+  
+    scale_fill_manual(values = c("sith" = "red", "jedi" = "blue")) +
+  
+  #fill the boxes based on species again
+        
+  #now use geom_boxplot
+  geom_boxplot() +
+  labs(title = "Comparison of Length Between Sith and Jedi",
+       x = "Species",
+       y = "Length") +
+  theme_minimal()
+
+#print the plot
+plot(guys_box)
+
+```
+
+1c saving the plots
+
+The main file formats for saving plots are PNG, PDF and SVG.
+
+PNG files are images and the dimensions can be determined manually, easy file format for sharing results quickly for discussions.
+
+PDF files are scalable and the most useful for publications and printing.
+
+SVG files are vector based files which are the best for interactive graphs and website publications.
+
+For this exercise I will save the graphs as PDF.
+
+```{r}
+pdf("guys_histo.pdf")
+#this opens a new pdf file as a graphics device
+
+print(guys_histo)
+#this tells r to print the histogram in the pdf
+
+dev.off()
+#this tells r to turn off the pdf as a graphics device
+
+
+#repeat for the boxplot
+pdf("guys_box.pdf")
+plot(guys_box)
+dev.off()
+```
+
+2 Microarray analysis
+
+2a Loading the matrix
+
+```{r}
+#use readr to load the table
+array = readr::read_tsv("microarray_data.tab")
+```
+
+The matrix has 551 rows (samples) and 1000 columns (genes)
+
+2b NA values check
+
+```{r}
+#define na_counts with the na values
+na_counts <- array %>%
+  
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  
+  #summarise counts the na values per gene
+  
+  pivot_longer(cols = everything(),
+               names_to = "column",
+               values_to = "na_count")
+  #pivot the count into a long format table
+
+print(na_counts)
+#check the table
+```
+
+Now we have a table with NA counts, lets visualize
+
+```{r}
+ggplot(na_counts, aes(x = column, y = na_count)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Number of NA Values per Column",
+       x = "Column",
+       y = "NA Count") +
+  theme_minimal()+
+  
+  #hide the x axis texts due to too many labels
+   theme(axis.text.x = element_blank())
+```
+
+2c Limit genes with missing values
+
+```{r}
+#calculate percentages of na values
+
+na_stats <- array %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(cols = everything(),
+               names_to = "gene",
+               values_to = "na_count") %>%
+  
+  #count na values and create long table 
+  
+  mutate(na_percent = (na_count / 551) * 100) 
+  #count the fraction of na values (551 is the number of rows), then turn into %
+
+print(na_stats)
+```
+
+Set limits and define as objects
+
+```{r}
+genes_10 <- na_stats %>% filter(na_percent > 10)
+genes_20 <- na_stats %>% filter(na_percent > 20)
+genes_50 <- na_stats %>% filter(na_percent > 50)
+```
+
+Take a look at genes above 50%
+
+```{r}
+print(genes_50)
+```
+
+Check how many genes in each category
+
+```{r}
+cat("Genes with >10% missing:", nrow(genes_10), "\n")
+cat("Genes with >20% missing:", nrow(genes_20), "\n")
+cat("Genes with >50% missing:", nrow(genes_50), "\n")
+```
+
+2d Impute missing values
+
+```{r}
+#use mutate command, apply to all columns with across(everything), use mean as input
+array_imputed <- array %>%
+  mutate(across(everything(),
+                ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+print(array_imputed)
+```
+
+3 CO2 data set exploration
+
+Lets look at the structure of the table
+
+```{r}
+print(CO2)
+```
+
+There are both chilled and nonchilled conditions, lets see if there is a difference between the conditions using a boxplot.
+
+```{r}
+
+ggplot(CO2, aes(x = Treatment, y = uptake, fill = Treatment)) +
+  
+  #now use geom_boxplot
+  geom_boxplot() +
+  labs(title = "Comparison Treatment",
+       x = "Treatment",
+       y = "uptake") +
+  theme_minimal() 
+```
+
+It seems that chilling the plants tend to reduce uptake across species.
+
+Lets also consider locations in this analysis.
+
+```{r}
+ggplot(CO2, aes(x = Plant, y = uptake, fill = Treatment)) +
+  geom_boxplot() +                       
+  facet_wrap(~ Type, scales = "free_x") + 
+  
+  labs(title = "CO₂ Uptake by Plant, Location, and Treatment",
+       x = "Plant",
+       y = "CO2 Uptake (μmol/m^2 s)") +
+  scale_fill_manual(values = c("chilled" = "skyblue",
+                               "nonchilled" = "orange")) +
+  
+  theme_minimal() +
+  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  #give the x axis text an angle for better readability
+
+
+```
+
+It seems as though the plants from Quebec are not as much hindered in their ability to absorb CO2 when they are chilled. This makes sense as Quebec can get quite chilly (trust me, I am a McGill student), so you would expect those plants to adapt this kind of temperature change.
+
+## Task 8
+
+1 a install and load tidybiology
+
+```{r}
+library(tidybiology)
+```
+
+Extract summary statistics from chromosome data
+
+```{r}
+data("chromosome")  # load the dataset
+
+chrom_summary <- chromosome %>%
+  summarise(
+    mean_variations = mean(variations, na.rm = TRUE),
+    median_variations = median(variations, na.rm = TRUE),
+    max_variations = max(variations, na.rm = TRUE),
+    
+    mean_protein_coding = mean(protein_codinggenes, na.rm = TRUE),
+    median_protein_coding = median(protein_codinggenes, na.rm = TRUE),
+    max_protein_coding = max(protein_codinggenes, na.rm = TRUE),
+    
+    mean_miRNAs = mean(mi_rna, na.rm = TRUE),
+    median_miRNAs = median(mi_rna, na.rm = TRUE),
+    max_miRNAs = max(mi_rna, na.rm = TRUE)
+  )
+
+chrom_summary
+```
+
+1 b Analyse distribution of chromosome size using ggplot
+
+```{r}
+ggplot(chromosome, aes(x = basepairs)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white", alpha = 0.8) +
+  labs(
+    title = "Distribution of Chromosome Sizes",
+    x = "Chromosome Size (bp)",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+1 c Correlation of miRNA and protein coding genes with chromosome size
+
+```{r}
+#calculation of the correlation coefficient using cor
+
+cor_protein <- cor(chromosome$basepairs, chromosome$protein_codinggenes, method = "pearson")
+cor_mirna   <- cor(chromosome$basepairs, chromosome$mi_rna, method = "pearson")
+
+cor_protein
+cor_mirna
+```
+
+There seems to be a weak correlation with the number of protein genes and protein size but a stronger correlation with chromosome size and number of miRNAs.
+
+Visualization of correlations with ggplot
+
+```{r}
+ggplot(chromosome, aes(x = basepairs, y = protein_codinggenes)) +
+  geom_point(color = "steelblue", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
+  labs(
+    title = "Protein-coding Genes vs Chromosome Size",
+    x = "Chromosome Size (bp)",
+    y = "Number of Protein-coding Genes"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(chromosome, aes(x = basepairs, y = mi_rna)) +
+  geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkorange") +
+  labs(
+    title = "miRNAs vs Chromosome Size",
+    x = "Chromosome Size (bp)",
+    y = "Number of miRNAs"
+  ) +
+  theme_minimal()
+```
+
+1 d summary statistics for protein length and mass
+
+```{r}
+data("proteins")
+
+# Calculate summary statistics
+summary_stats <- proteins %>%
+  summarise(
+    mean_length  = mean(length, na.rm = TRUE),
+    median_length = median(length, na.rm = TRUE),
+    max_length   = max(length, na.rm = TRUE),
+    mean_mass    = mean(mass, na.rm = TRUE),
+    median_mass  = median(mass, na.rm = TRUE),
+    max_mass     = max(mass, na.rm = TRUE)
+  )
+
+summary_stats
+```
+
+Visualization of length and mass relationship
+
+```{r}
+#calculate the correlation coefficient with cor and assign it to r_value
+cor_result <- cor.test(proteins$length, proteins$mass, use = "complete.obs", method = "pearson")
+r_value <- round(cor_result$estimate, 3)  # round to 3 decimals
+
+
+#plot the protein length against the mass as a dot plot
+ggplot(proteins, aes(x = length, y = mass)) +
+  
+  #datapoints as blue dots
+  geom_point(alpha = 0.5, color = "steelblue") +
+  
+  #add the regression line
+  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
+  
+  #log scale for better representation
+  scale_x_log10() +  
+  scale_y_log10() +
+  labs(
+    title = "Relationship Between Protein Length and Mass",
+    x = "Protein Length (amino acids, log scale)",
+    y = "Protein Mass (Daltons, log scale)"
+  ) +
+  
+  #show the r value with an annotate command
+  annotate("text", x = 100, y = 1e6, 
+           label = paste("r =", r_value), 
+           color = "black", size = 5, hjust = 0) +
+  theme_minimal()
+```
+
+There is a strong correlation between protein length in amino acids and protein mass in daltons.
+
+-   Jan Pack
